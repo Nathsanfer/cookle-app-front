@@ -18,7 +18,7 @@ const slides = [
 
 export default function Home() {
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
 
       <View style={styles.containerHeader}>
 
@@ -61,6 +61,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  scrollContent: {
+    paddingBottom: 80, 
   },
   containerHeader: {
     backgroundColor: '#A7333F',
