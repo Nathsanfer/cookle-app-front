@@ -2,6 +2,7 @@ import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity, TextInput 
 
 import CarouselComponent from "../components/Carousel/Carousel.jsx";
 import RecipeCard from "../components/RecipeCard/RecipeCard.jsx";
+import RecipeList from "../components/RecipeList/RecipeList.jsx";
 
 const slides = [
   {
@@ -49,6 +50,8 @@ export default function Home() {
       <CarouselComponent slides={slides} />
 
       <RecipeCard />
+
+      <RecipeList />
 
     </ScrollView>
   );

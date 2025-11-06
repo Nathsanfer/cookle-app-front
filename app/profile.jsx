@@ -1,9 +1,14 @@
 import { View, Text, StyleSheet } from "react-native";
 
+import RecipeList from "../components/RecipeList/RecipeList";
+
 export default function Profile() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Tela de Perfil 👤</Text>
+
+      <RecipeList />
+
+
     </View>
   );
 }
