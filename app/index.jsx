@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from "react-native";
+import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from "react-native";
 
 import CarouselComponent from "../components/Carousel/Carousel.jsx";
+import RecipeCard from "../components/RecipeCard/RecipeCard.jsx";
 
 const slides = [
   {
@@ -16,7 +17,7 @@ const slides = [
 
 export default function Home() {
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
 
       <View style={styles.containerHeader}>
 
@@ -47,9 +48,9 @@ export default function Home() {
 
       <CarouselComponent slides={slides} />
 
+      <RecipeCard />
 
-      <Text style={styles.text}>Tela de Início 🏠</Text>
-    </View>
+    </ScrollView>
   );
 }
 
