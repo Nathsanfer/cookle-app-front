@@ -1,5 +1,19 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from "react-native";
 
+import CarouselComponent from "../components/Carousel/Carousel.jsx";
+
+const slides = [
+  {
+      image: { uri: 'https://receitas123.com/wp-content/uploads/2023/07/massa-italiana.png' }
+  },
+  {
+      image: { uri: 'https://www.guiadasemana.com.br/contentFiles/system/pictures/2015/11/148113/original/tiramisu.jpg' }
+  },
+  {
+      image: { uri: 'https://diariodonordeste.verdesmares.com.br/image/contentid/policy:1.3284198:1664578252/Batata.jpg?f=16x9&h=574&w=1020&$p$f$h$w=825e64e' }
+  },
+];
+
 export default function Home() {
   return (
     <View style={styles.container}>
@@ -30,6 +44,9 @@ export default function Home() {
         </View>
         
       </View>
+
+      <CarouselComponent slides={slides} />
+
 
       <Text style={styles.text}>Tela de Início 🏠</Text>
     </View>
