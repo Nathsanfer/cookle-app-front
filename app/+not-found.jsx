@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
+import { Stack } from "expo-router";
 
 export default function NotFound() {
   const router = useRouter();
@@ -20,31 +21,34 @@ export default function NotFound() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        {/* Imagem do chef */}
-        <Image 
-          source={require('../public/images/littleCheff.png')} 
-          style={styles.chefImage}
-          resizeMode="contain"
-        />
-        
-        {/* Título */}
-        <Text style={styles.title}>404 - Página não encontrada</Text>
-        
-        {/* Subtítulo */}
-        <Text style={styles.subtitle}>A página que você procura não existe</Text>
-        
-        {/* Botão */}
-        <TouchableOpacity 
-          style={styles.button}
-          onPress={handleGoHome}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.buttonText}>Voltar para Home</Text>
-        </TouchableOpacity>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={styles.container}>
+        <View style={styles.content}>
+          {/* Imagem do chef */}
+          <Image 
+            source={require('../public/images/littleCheff.png')} 
+            style={styles.chefImage}
+            resizeMode="contain"
+          />
+          
+          {/* Título */}
+          <Text style={styles.title}>404 - Página não encontrada</Text>
+          
+          {/* Subtítulo */}
+          <Text style={styles.subtitle}>A página que você procura não existe</Text>
+          
+          {/* Botão */}
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={handleGoHome}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>Voltar para Home</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </>
   );
 }
 
@@ -66,7 +70,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: "bold",
     fontFamily: "Poppins_600SemiBold",
     color: "#A7333F",
     textAlign: "center",

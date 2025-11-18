@@ -67,6 +67,15 @@ export default function Layout() {
           ),
         }}
       />
+
+      {/* Tela 404 - Oculta da navegação e sem tabs */}
+      <Tabs.Screen
+        name="+not-found"
+        options={{
+          href: null,
+          tabBarStyle: { display: "none" },
+        }}
+      />
     </Tabs>
   );
 }
