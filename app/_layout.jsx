@@ -2,10 +2,12 @@
 import { Tabs } from "expo-router";
 // Importa os ícones
 import { Ionicons } from "@expo/vector-icons";
+import { FavoritesProvider } from "../contexts/FavoritesContext";
 
 export default function Layout() {
   return (
-    <Tabs
+    <FavoritesProvider>
+      <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: "#fff",
@@ -77,5 +79,6 @@ export default function Layout() {
         }}
       />
     </Tabs>
+    </FavoritesProvider>
   );
 }

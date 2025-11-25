@@ -1,10 +1,12 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
+import { useFavorites } from '../../contexts/FavoritesContext';
 
 export default function RecipeList() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   useEffect(() => {
     fetchRecipes();
@@ -68,8 +70,15 @@ export default function RecipeList() {
         resizeMode="cover"
       />
       
-      <TouchableOpacity style={styles.favoriteButton}>
-        <Ionicons name="heart-outline" size={20} color="#fff" />
+      <TouchableOpacity 
+        style={styles.favoriteButton}
+        onPress={() => toggleFavorite(item)}
+      >
+        <Ionicons 
+          name={isFavorite(item.id) ? "heart" : "heart-outline"} 
+          size={20} 
+          color={isFavorite(item.id) ? "#A7333F" : "#fff"} 
+        />
       </TouchableOpacity>
 
       <View style={styles.ratingContainer}>

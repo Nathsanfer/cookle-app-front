@@ -1,10 +1,12 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
+import { useFavorites } from '../../contexts/FavoritesContext';
 
 export default function RecipeCard() {
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   useEffect(() => {
     fetchTopRecipe();
@@ -46,8 +48,15 @@ export default function RecipeCard() {
           resizeMode="cover"
         />
         
-        <TouchableOpacity style={styles.favoriteButton}>
-          <Ionicons name="heart-outline" size={24} color="#fff" />
+        <TouchableOpacity 
+          style={styles.favoriteButton}
+          onPress={() => toggleFavorite(recipe)}
+        >
+          <Ionicons 
+            name={isFavorite(recipe.id) ? "heart" : "heart-outline"} 
+            size={24} 
+            color={isFavorite(recipe.id) ? "#A7333F" : "#fff"} 
+          />
         </TouchableOpacity>
 
         <View style={styles.ratingContainer}>
