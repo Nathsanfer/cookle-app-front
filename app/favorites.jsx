@@ -2,10 +2,12 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated }
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from "../contexts/FavoritesContext";
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'expo-router';
 
 export default function Favorites() {
   const { favoriteRecipes, toggleFavorite, isFavorite } = useFavorites();
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const router = useRouter();
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -16,7 +18,12 @@ export default function Favorites() {
   }, [favoriteRecipes.length]);
 
   const renderRecipeItem = (item) => (
-    <View key={item.id} style={styles.card}>
+    <TouchableOpacity 
+      key={item.id} 
+      style={styles.card}
+      onPress={() => router.push(`/recipe/${item.id}`)}
+      activeOpacity={0.8}
+    >
       <Image 
         source={{ uri: item.imageUrl || item.image }} 
         style={styles.image}
@@ -25,7 +32,10 @@ export default function Favorites() {
       
       <TouchableOpacity 
         style={styles.favoriteButton}
-        onPress={() => toggleFavorite(item)}
+        onPress={(e) => {
+          e.stopPropagation();
+          toggleFavorite(item);
+        }}
       >
         <Ionicons 
           name={isFavorite(item.id) ? "heart" : "heart-outline"} 
@@ -60,7 +70,7 @@ export default function Favorites() {
           )}
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderRows = () => {
@@ -132,7 +142,7 @@ export default function Favorites() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#fcf8f8ff',
+    backgroundColor: '#fffefeff',
   },
   scrollContent: {
     paddingBottom: 100,

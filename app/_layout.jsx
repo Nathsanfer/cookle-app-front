@@ -78,6 +78,14 @@ export default function Layout() {
           tabBarStyle: { display: "none" },
         }}
       />
+
+      {/* Tela de Detalhes da Receita - Oculta da navegação mas mantém tabs */}
+      <Tabs.Screen
+        name="recipe/[id]"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
     </FavoritesProvider>
   );

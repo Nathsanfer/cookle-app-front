@@ -2,11 +2,13 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } fr
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { useFavorites } from '../../contexts/FavoritesContext';
+import { useRouter } from 'expo-router';
 
 export default function RecipeList() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const { toggleFavorite, isFavorite } = useFavorites();
+  const router = useRouter();
 
   useEffect(() => {
     fetchRecipes();
@@ -63,7 +65,12 @@ export default function RecipeList() {
   }
 
   const renderRecipeItem = (item) => (
-    <TouchableOpacity key={item.id} style={styles.card}>
+    <TouchableOpacity 
+      key={item.id} 
+      style={styles.card}
+      onPress={() => router.push(`/recipe/${item.id}`)}
+      activeOpacity={0.8}
+    >
       <Image 
         source={{ uri: item.imageUrl || item.image }} 
         style={styles.image}
@@ -72,7 +79,10 @@ export default function RecipeList() {
       
       <TouchableOpacity 
         style={styles.favoriteButton}
-        onPress={() => toggleFavorite(item)}
+        onPress={(e) => {
+          e.stopPropagation();
+          toggleFavorite(item);
+        }}
       >
         <Ionicons 
           name={isFavorite(item.id) ? "heart" : "heart-outline"} 
