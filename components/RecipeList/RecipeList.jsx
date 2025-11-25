@@ -1,10 +1,10 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useRouter } from 'expo-router';
 
-export default function RecipeList() {
+export default function RecipeList({ searchQuery = "" }) {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const { toggleFavorite, isFavorite } = useFavorites();
@@ -43,6 +43,22 @@ export default function RecipeList() {
     }
   };
 
+  // Filtrar receitas com base na pesquisa
+  const filteredRecipes = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return recipes;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    
+    return recipes.filter(recipe => {
+      const name = (recipe.name || recipe.title || '').toLowerCase();
+      const cuisine = (recipe.cuisine || recipe.culinaria || recipe.category || '').toLowerCase();
+      
+      return name.includes(query) || cuisine.includes(query);
+    });
+  }, [recipes, searchQuery]);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -59,6 +75,21 @@ export default function RecipeList() {
         <Text>Nenhuma receita encontrada.</Text>
         <Text style={{ fontSize: 10, color: '#999', marginTop: 10 }}>
           Verifique se a API está rodando em http://localhost:5000
+        </Text>
+      </View>
+    );
+  }
+
+  // Mostrar mensagem se a pesquisa não retornar resultados
+  if (searchQuery.trim() && filteredRecipes.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.sectionTitle}>Receitas</Text>
+        <Text style={styles.noResultsText}>
+          Nenhuma receita encontrada para "{searchQuery}"
+        </Text>
+        <Text style={styles.searchHint}>
+          Tente pesquisar por nome da receita ou tipo de culinária
         </Text>
       </View>
     );
@@ -111,11 +142,11 @@ export default function RecipeList() {
 
   const renderRows = () => {
     const rows = [];
-    for (let i = 0; i < recipes.length; i += 2) {
+    for (let i = 0; i < filteredRecipes.length; i += 2) {
       rows.push(
         <View key={i} style={styles.row}>
-          {renderRecipeItem(recipes[i])}
-          {recipes[i + 1] && renderRecipeItem(recipes[i + 1])}
+          {renderRecipeItem(filteredRecipes[i])}
+          {filteredRecipes[i + 1] && renderRecipeItem(filteredRecipes[i + 1])}
         </View>
       );
     }
@@ -124,7 +155,10 @@ export default function RecipeList() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Receitas ({recipes.length})</Text>
+      <Text style={styles.sectionTitle}>
+        Receitas ({filteredRecipes.length})
+        {searchQuery.trim() && <Text style={styles.searchIndicator}> - "{searchQuery}"</Text>}
+      </Text>
       {renderRows()}
     </View>
   );
@@ -141,6 +175,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 16,
+  },
+  searchIndicator: {
+    fontSize: 16,
+    fontWeight: 'normal',
+    color: '#A7333F',
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  searchHint: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 8,
   },
   loadingContainer: {
     padding: 40,

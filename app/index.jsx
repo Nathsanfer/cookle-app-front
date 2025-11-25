@@ -1,4 +1,5 @@
 import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from "react-native";
+import { useState } from "react";
 
 import CarouselComponent from "../components/Carousel/Carousel.jsx";
 import RecipeCard from "../components/RecipeCard/RecipeCard.jsx";
@@ -17,6 +18,8 @@ const slides = [
 ];
 
 export default function Home() {
+  const [searchQuery, setSearchQuery] = useState("");
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
 
@@ -39,6 +42,8 @@ export default function Home() {
             style={styles.searchInput}
             placeholder="Pesquise por receitas..."
             placeholderTextColor="#999"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
           <TouchableOpacity style={styles.filterButton}>
             <Image source={require('../public/icons/filtro.png')} style={styles.filterIcon} />
@@ -51,7 +56,7 @@ export default function Home() {
 
       <RecipeCard />
 
-      <RecipeList />
+      <RecipeList searchQuery={searchQuery} />
 
     </ScrollView>
   );
