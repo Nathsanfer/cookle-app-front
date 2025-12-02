@@ -41,6 +41,10 @@ Instalação & execução (ambiente de desenvolvimento)
 
    `npm install`
 
+   Observação: este projeto usa `expo-image-picker`. Para garantir que a versão nativa compatível seja instalada automaticamente após `npm install`, o projeto adiciona um `postinstall` que executa `npx expo install expo-image-picker`. Se preferir executar manualmente, rode:
+
+    `npx expo install expo-image-picker`
+
 3. Inicie o Metro/Expo:
 
    `npm start`

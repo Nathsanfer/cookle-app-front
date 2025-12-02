@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "postinstall": "npx expo install expo-image-picker || true"
   },
   "dependencies": {
     "@expo-google-fonts/poppins": "^0.4.1",
@@ -14,6 +15,7 @@
     "@react-navigation/native": "^7.1.19",
     "expo": "~54.0.20",
     "expo-font": "~14.0.9",
+    "expo-image-picker": "~17.0.8",
     "expo-router": "~6.0.14",
     "expo-status-bar": "~3.0.8",
     "react": "19.1.0",

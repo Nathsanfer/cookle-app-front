@@ -5,9 +5,17 @@ import {
   ScrollView, 
   TextInput, 
   TouchableOpacity,
-  Platform
+  Platform,
+  Alert,
+  ActivityIndicator,
+  Modal,
+  FlatList,
+  Pressable,
+  Image,
 } from "react-native";
 import { useState } from "react";
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
 
@@ -20,6 +28,38 @@ export default function Create() {
   const [portions, setPortions] = useState("");
   const [ingredients, setIngredients] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const [modalVisible, setModalVisible] = useState(null); // 'category' | 'country' | 'prepTime' | 'portions' | null
+  const [imageUri, setImageUri] = useState(null);
+
+  const categories = ['Sobremesa', 'Entrada', 'Prato Principal', 'Lanche'];
+  const countries = ['Americana', 'Italiana', 'Brasileira', 'Mexicana', 'Francesa'];
+  const prepTimes = ['10', '15', '20', '30', '45', '60'];
+  const portionOptions = ['1', '2', '4', '6', '8', '10'];
+
+  const pickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permissão', 'Permissão para acessar a galeria negada.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.7,
+        allowsEditing: true,
+      });
+
+      if (!result.cancelled) {
+        setImageUri(result.uri);
+      }
+    } catch (err) {
+      console.error('Erro ao selecionar imagem:', err);
+      Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+    }
+  };
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -31,9 +71,57 @@ export default function Create() {
     return null;
   }
 
-  const handleSave = () => {
-    // Lógica para salvar a receita
-    console.log("Salvando receita...");
+  const handleSave = async () => {
+    // Validação mínima
+    if (!name.trim()) {
+      Alert.alert('Erro', 'O campo Nome é obrigatório.');
+      return;
+    }
+
+    const payload = {
+      name: name.trim(),
+      description: description.trim(),
+      category: category || undefined,
+      cuisine: country || undefined,
+      prepTime: prepTime || undefined,
+      portions: portions || undefined,
+      ingredients: ingredients.trim(),
+      instructions: instructions.trim(),
+      // image handling not implemented yet
+    };
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/recipes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...payload,
+          image: imageUri || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Erro ao criar receita:', response.status, text);
+        Alert.alert('Erro', 'Não foi possível criar a receita.');
+        return;
+      }
+
+      const data = await response.json();
+      console.log('Receita criada:', data);
+      Alert.alert('Sucesso', 'Receita criada com sucesso!', [
+        { text: 'OK', onPress: () => router.push('/') }
+      ]);
+    } catch (error) {
+      console.error('Erro ao criar receita:', error);
+      Alert.alert('Erro', 'Erro de conexão ao criar a receita.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -77,7 +165,7 @@ export default function Create() {
         {/* Categoria */}
         <View style={styles.fieldContainer}>
           <Text style={styles.label}>Categoria</Text>
-          <TouchableOpacity style={styles.select}>
+          <TouchableOpacity style={styles.select} onPress={() => setModalVisible('category')}>
             <Text style={[styles.selectText, !category && styles.placeholderText]}>
               {category || "Selecione a categoria"}
             </Text>
@@ -88,7 +176,7 @@ export default function Create() {
         {/* Culinária */}
         <View style={styles.fieldContainer}>
           <Text style={styles.label}>Culinária</Text>
-          <TouchableOpacity style={styles.select}>
+          <TouchableOpacity style={styles.select} onPress={() => setModalVisible('country')}>
             <Text style={[styles.selectText, !country && styles.placeholderText]}>
               {country || "Selecione o país de origem"}
             </Text>
@@ -100,19 +188,19 @@ export default function Create() {
         <View style={styles.row}>
           <View style={[styles.fieldContainer, styles.halfWidth]}>
             <Text style={styles.label}>Tempo de preparo</Text>
-            <TouchableOpacity style={styles.select}>
-              <Text style={[styles.selectText, !prepTime && styles.placeholderText]}>
-                {prepTime || "Selecione o tempo"}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color="#A7333F" />
-            </TouchableOpacity>
+              <TouchableOpacity style={styles.select} onPress={() => setModalVisible('prepTime')}>
+                <Text style={[styles.selectText, !prepTime && styles.placeholderText]}>
+                  {prepTime ? `${prepTime} min` : "Selecione o tempo"}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color="#A7333F" />
+              </TouchableOpacity>
           </View>
 
           <View style={[styles.fieldContainer, styles.halfWidth]}>
             <Text style={styles.label}>Porção</Text>
-            <TouchableOpacity style={styles.select}>
+            <TouchableOpacity style={styles.select} onPress={() => setModalVisible('portions')}>
               <Text style={[styles.selectText, !portions && styles.placeholderText]}>
-                {portions || "Selecione o valor"}
+                {portions ? `${portions} porções` : "Selecione o valor"}
               </Text>
               <Ionicons name="chevron-down" size={20} color="#A7333F" />
             </TouchableOpacity>
@@ -150,20 +238,71 @@ export default function Create() {
         {/* Imagem */}
         <View style={styles.fieldContainer}>
           <Text style={styles.label}>Imagem</Text>
-          <TouchableOpacity style={styles.imageUpload}>
-            <Ionicons name="cloud-upload-outline" size={24} color="#999" />
-            <Text style={styles.imageUploadText}>Selecione o arquivo</Text>
+          <TouchableOpacity style={styles.imageUpload} onPress={pickImage} activeOpacity={0.8}>
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={{ width: 80, height: 80, borderRadius: 8 }} />
+            ) : (
+              <>
+                <Ionicons name="cloud-upload-outline" size={24} color="#999" />
+                <Text style={styles.imageUploadText}>Selecione o arquivo</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
 
         {/* Botão Salvar */}
         <TouchableOpacity 
-          style={styles.saveButton}
+          style={[styles.saveButton, isSubmitting && { opacity: 0.8 }]}
           onPress={handleSave}
           activeOpacity={0.8}
+          disabled={isSubmitting}
         >
-          <Text style={styles.saveButtonText}>SALVAR</Text>
+          {isSubmitting ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.saveButtonText}>SALVAR</Text>
+          )}
         </TouchableOpacity>
+
+        {/* Modal para selects */}
+        <Modal
+          visible={!!modalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setModalVisible(null)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <FlatList
+                data={
+                  modalVisible === 'category' ? categories :
+                  modalVisible === 'country' ? countries :
+                  modalVisible === 'prepTime' ? prepTimes :
+                  modalVisible === 'portions' ? portionOptions : []
+                }
+                keyExtractor={(item, idx) => `${modalVisible}-${item}-${idx}`}
+                renderItem={({ item }) => (
+                  <Pressable
+                    onPress={() => {
+                      if (modalVisible === 'category') setCategory(item);
+                      if (modalVisible === 'country') setCountry(item);
+                      if (modalVisible === 'prepTime') setPrepTime(item);
+                      if (modalVisible === 'portions') setPortions(item);
+                      setModalVisible(null);
+                    }}
+                    style={({ pressed }) => [styles.optionItem, pressed && { backgroundColor: '#f2f2f2' }]}
+                  >
+                    <Text style={styles.optionText}>{modalVisible === 'prepTime' ? `${item} min` : modalVisible === 'portions' ? `${item} porções` : item}</Text>
+                  </Pressable>
+                )}
+                ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: '#eee' }} />}
+              />
+              <TouchableOpacity style={styles.modalClose} onPress={() => setModalVisible(null)}>
+                <Text style={{ color: '#A7333F', fontWeight: '600' }}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         {/* Espaço extra para o tab bar */}
         <View style={styles.bottomSpacer} />
@@ -287,5 +426,29 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 100,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    paddingBottom: 20,
+    maxHeight: '50%'
+  },
+  optionItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  modalClose: {
+    padding: 12,
+    alignItems: 'center',
   },
 });
