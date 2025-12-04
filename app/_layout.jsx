@@ -3,10 +3,12 @@ import { Tabs } from "expo-router";
 // Importa os ícones
 import { Ionicons } from "@expo/vector-icons";
 import { FavoritesProvider } from "../contexts/FavoritesContext";
+import { RecipesProvider } from "../contexts/RecipesContext";
 
 export default function Layout() {
   return (
-    <FavoritesProvider>
+    <RecipesProvider>
+      <FavoritesProvider>
       <Tabs
       screenOptions={{
         headerShown: false,
@@ -88,5 +90,6 @@ export default function Layout() {
       />
     </Tabs>
     </FavoritesProvider>
+    </RecipesProvider>
   );
 }

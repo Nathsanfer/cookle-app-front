@@ -2,12 +2,13 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } fr
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect, useMemo } from 'react';
 import { useFavorites } from '../../contexts/FavoritesContext';
+import { useRecipes } from '../../contexts/RecipesContext';
 import { useRouter } from 'expo-router';
 
 export default function RecipeList({ searchQuery = "" }) {
-  const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { getAllRecipes, loadApiRecipes, createdRecipes } = useRecipes();
   const router = useRouter();
 
   useEffect(() => {
@@ -16,32 +17,18 @@ export default function RecipeList({ searchQuery = "" }) {
 
   const fetchRecipes = async () => {
     try {
-      const response = await fetch('http://localhost:5000/recipes');
-      
-      if (!response.ok) {
-        console.error('Erro na resposta:', response.status);
-        return;
-      }
-      
-      const data = await response.json();
-      
-      console.log('Dados completos da API:', JSON.stringify(data, null, 2));
-      console.log('Tipo de dados:', typeof data);
-      console.log('É array?', Array.isArray(data));
-      
-      // Se os dados vierem em um objeto, extrair o array
-      const recipeArray = Array.isArray(data) ? data : (data.recipes || data.data || []);
-      
-      console.log('Array de receitas:', recipeArray);
-      console.log('Quantidade:', recipeArray.length);
-      
-      setRecipes(recipeArray);
+      await loadApiRecipes();
     } catch (error) {
       console.error('Erro ao buscar receitas:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Combinar receitas criadas + API
+  const recipes = useMemo(() => {
+    return getAllRecipes();
+  }, [createdRecipes]);
 
   // Filtrar receitas com base na pesquisa
   const filteredRecipes = useMemo(() => {

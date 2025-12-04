@@ -1,9 +1,10 @@
 import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import CarouselComponent from "../components/Carousel/Carousel.jsx";
 import RecipeCard from "../components/RecipeCard/RecipeCard.jsx";
 import RecipeList from "../components/RecipeList/RecipeList.jsx";
+import { useRecipes } from "../contexts/RecipesContext.jsx";
 
 const slides = [
   {
@@ -19,6 +20,13 @@ const slides = [
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { loadCreatedRecipes, loadApiRecipes } = useRecipes();
+
+  // Carregar receitas criadas e da API ao montar o componente
+  useEffect(() => {
+    loadCreatedRecipes();
+    loadApiRecipes();
+  }, []);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>

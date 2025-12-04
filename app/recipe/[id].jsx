@@ -1,15 +1,18 @@
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { useFavorites } from '../../contexts/FavoritesContext';
+import { useRecipes } from '../../contexts/RecipesContext';
 
 export default function RecipeDetails() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { getRecipeById, deleteRecipe } = useRecipes();
 
   useEffect(() => {
     fetchRecipeDetails();
@@ -17,14 +20,59 @@ export default function RecipeDetails() {
 
   const fetchRecipeDetails = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/recipes/${id}`);
-      const data = await response.json();
-      setRecipe(data);
+      // Buscar do contexto (que inclui receitas criadas + API)
+      const recipeData = getRecipeById(id);
+      
+      if (recipeData) {
+        setRecipe(recipeData);
+        setLoading(false);
+      } else {
+        // Se não encontrar, tentar da API
+        const response = await fetch(`http://localhost:5000/recipes/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setRecipe(data);
+        }
+      }
     } catch (error) {
       console.error('Erro ao buscar detalhes da receita:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = async () => {
+    Alert.alert(
+      'Deletar Receita',
+      'Tem certeza que deseja deletar esta receita? Esta ação não pode ser desfeita.',
+      [
+        {
+          text: 'Cancelar',
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: 'Deletar',
+          onPress: async () => {
+            try {
+              setIsDeleting(true);
+              await deleteRecipe(id);
+              Alert.alert('Sucesso!', 'Receita deletada com sucesso!', [
+                {
+                  text: 'OK',
+                  onPress: () => router.back(),
+                },
+              ]);
+            } catch (error) {
+              Alert.alert('Erro', 'Não foi possível deletar a receita');
+              console.error('Erro ao deletar:', error);
+              setIsDeleting(false);
+            }
+          },
+          style: 'destructive',
+        },
+      ]
+    );
   };
 
   if (loading) {
@@ -82,6 +130,16 @@ export default function RecipeDetails() {
             color={isFavorite(recipe.id) ? "#A7333F" : "#333"} 
           />
         </TouchableOpacity>
+
+        {recipe.isCreated && (
+          <TouchableOpacity 
+            style={styles.deleteIconButton}
+            onPress={handleDelete}
+            disabled={isDeleting}
+          >
+            <Ionicons name="trash-outline" size={24} color="#FF4444" />
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity style={styles.shareIconButton}>
           <Ionicons name="share-social-outline" size={24} color="#333" />
@@ -266,6 +324,22 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 50,
     right: 70,
+    backgroundColor: '#fff',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  deleteIconButton: {
+    position: 'absolute',
+    top: 50,
+    right: 120,
     backgroundColor: '#fff',
     width: 40,
     height: 40,

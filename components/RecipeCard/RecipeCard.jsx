@@ -2,12 +2,14 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } fr
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { useFavorites } from '../../contexts/FavoritesContext';
+import { useRecipes } from '../../contexts/RecipesContext';
 import { useRouter } from 'expo-router';
 
 export default function RecipeCard() {
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { recipes, createdRecipes, loadApiRecipes } = useRecipes();
   const router = useRouter();
 
   useEffect(() => {
@@ -16,10 +18,27 @@ export default function RecipeCard() {
 
   const fetchTopRecipe = async () => {
     try {
-      const response = await fetch('http://localhost:5000/recipes/43');
-      const data = await response.json();
+      // Tentar carregar de receitas criadas primeiro
+      if (createdRecipes.length > 0) {
+        setRecipe(createdRecipes[0]);
+        setLoading(false);
+        return;
+      }
+
+      // Se não houver criadas, buscar da API
+      await loadApiRecipes();
       
-      setRecipe(data);
+      if (recipes.length > 0) {
+        setRecipe(recipes[0]);
+      } else {
+        try {
+          const response = await fetch('http://localhost:5000/recipes/43');
+          const data = await response.json();
+          setRecipe(data);
+        } catch (error) {
+          console.error('Erro ao buscar receita específica:', error);
+        }
+      }
     } catch (error) {
       console.error('Erro ao buscar receita:', error);
     } finally {
