@@ -1,21 +1,25 @@
+// ========== IMPORTS ==========
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from "../contexts/FavoritesContext";
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 
+// ========== COMPONENTE PRINCIPAL ==========
 export default function Profile() {
+  // ========== STATE & HOOKS ==========
   const { favoriteRecipes } = useFavorites();
   const [activeTab, setActiveTab] = useState('about');
   const router = useRouter();
 
-  // Dados simulados do usuário
+  // ========== DADOS DO USUÁRIO ==========
   const userStats = {
     recipes: 12,
     followers: 245,
     following: 189,
   };
 
+  // ========== RENDER ==========
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header com gradiente */}
@@ -233,6 +237,7 @@ export default function Profile() {
   );
 }
 
+// ========== STYLES ==========
 const styles = StyleSheet.create({
   container: {
     flex: 1,

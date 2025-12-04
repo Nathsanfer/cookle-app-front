@@ -1,11 +1,12 @@
-// Importa o componente de navegação por abas do Expo Router
+// ========== IMPORTS ==========
 import { Tabs } from "expo-router";
-// Importa os ícones
 import { Ionicons } from "@expo/vector-icons";
 import { FavoritesProvider } from "../contexts/FavoritesContext";
 import { RecipesProvider } from "../contexts/RecipesContext";
 
+// ========== COMPONENTE DE LAYOUT ==========
 export default function Layout() {
+  // ========== PROVIDERS & TAB NAVIGATION ==========
   return (
     <RecipesProvider>
       <FavoritesProvider>

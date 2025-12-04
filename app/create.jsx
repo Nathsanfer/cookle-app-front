@@ -1,3 +1,4 @@
+// ========== IMPORTS ==========
 import { 
   View, 
   Text, 
@@ -18,12 +19,15 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useRecipes } from '../contexts/RecipesContext';
 
+// ========== CONSTANTS ==========
 const CATEGORIES = ['Entrada', 'Prato Principal', 'Sobremesa', 'Bebida', 'Aperitivo'];
 const CUISINES = ['Italiana', 'Brasileira', 'Francesa', 'Chinesa', 'Japonesa', 'Tailandesa', 'Mexicana', 'Americana'];
 const PREP_TIMES = ['15 min', '30 min', '45 min', '1h', '1h30', '2h', '3h', '4h+'];
 const PORTIONS = ['1', '2', '3', '4', '5', '6', '8', '10'];
 
+// ========== COMPONENTE PRINCIPAL ==========
 export default function Create() {
+  // ========== STATE & HOOKS ==========
   const router = useRouter();
   const { addRecipe, updateRecipe, getRecipeById } = useRecipes();
   const { id } = useLocalSearchParams();
@@ -43,6 +47,7 @@ export default function Create() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState({ title: '', subtitle: '' });
 
+  // ========== IMAGE PICKER ==========
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -56,7 +61,7 @@ export default function Create() {
     }
   };
 
-  // Carregar dados quando em modo edição
+  // ========== CARREGAR DADOS (MODO EDIÇÃO) ==========
   useEffect(() => {
     if (!id) return;
 
@@ -90,6 +95,7 @@ export default function Create() {
     setImageUrl(recipe.imageUrl || "");
   }, [id, getRecipeById]);
 
+  // ========== VALIDAÇÃO ==========
   const validateForm = () => {
     if (!name.trim()) {
       Alert.alert('Atenção', 'Por favor, digite o nome da receita');
@@ -126,6 +132,7 @@ export default function Create() {
     return true;
   };
 
+  // ========== SALVAR RECEITA ==========
   const handleSave = async () => {
     if (!validateForm()) return;
 
@@ -209,6 +216,7 @@ export default function Create() {
     }
   };
 
+  // ========== LIMPAR FORMULÁRIO ==========
   const clearForm = () => {
     setName("");
     setDescription("");
@@ -221,6 +229,7 @@ export default function Create() {
     setImageUrl("");
   };
 
+  // ========== CANCELAR EDIÇÃO ==========
   const handleCancel = () => {
     if (name.trim() || description.trim() || ingredients.trim() || instructions.trim()) {
       Alert.alert(
@@ -243,6 +252,7 @@ export default function Create() {
     }
   };
 
+  // ========== RENDER ==========
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -547,6 +557,7 @@ export default function Create() {
   );
 }
 
+// ========== COMPONENTE DE MODAL DE SUCESSO ==========
 function SuccessModal({ visible, title, subtitle }) {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -714,6 +725,7 @@ function SuccessModal({ visible, title, subtitle }) {
   );
 }
 
+// ========== COMPONENTE DE MODAL PICKER ==========
 function PickerModal({ visible, options, value, onSelect, onClose, title }) {
   return (
     <Modal
@@ -762,6 +774,7 @@ function PickerModal({ visible, options, value, onSelect, onClose, title }) {
   );
 }
 
+// ========== ESTILOS DO MODAL DE SUCESSO ==========
 const successModalStyles = StyleSheet.create({
   overlay: {
     flex: 1,
@@ -826,6 +839,7 @@ const successModalStyles = StyleSheet.create({
   },
 });
 
+// ========== ESTILOS DO MODAL PICKER ==========
 const modalStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -876,6 +890,7 @@ const modalStyles = StyleSheet.create({
   },
 });
 
+// ========== ESTILOS PRINCIPAIS ==========
 const styles = StyleSheet.create({
   container: {
     flex: 1,

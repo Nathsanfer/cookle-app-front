@@ -7,8 +7,10 @@ import RecipeList from "../components/RecipeList/RecipeList.jsx";
 import { useRecipes } from "../contexts/RecipesContext.jsx";
 import { Ionicons } from "@expo/vector-icons";
 
+// Lista de culinárias disponíveis para filtragem
 const CUISINES = ['Todas', 'Italiana', 'Brasileira', 'Francesa', 'Chinesa', 'Japonesa', 'Tailandesa', 'Mexicana', 'Americana'];
 
+// Dados do carrossel de imagens
 const slides = [
   {
       image: { uri: 'https://receitas123.com/wp-content/uploads/2023/07/massa-italiana.png' }
@@ -30,8 +32,10 @@ export default function Home() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
 
+      {/* ========== HEADER ========== */}
       <View style={styles.containerHeader}>
 
+        {/* Informações do usuário e notificações */}
         <View style={styles.infoHeader}>
           <Image source={require('../public/images/perfil.png')} style={styles.profileImage} />
           <View style={styles.info}>
@@ -43,6 +47,7 @@ export default function Home() {
           </TouchableOpacity>
         </View>
 
+        {/* Barra de busca com filtro */}
         <View style={styles.searchBox}>
           <Image source={require('../public/icons/lupa.png')} style={styles.searchIcon} />
           <TextInput 
@@ -65,11 +70,14 @@ export default function Home() {
         
       </View>
 
+      {/* ========== CARROSSEL ========== */}
       <CarouselComponent slides={slides} />
 
+      {/* ========== RECIPE CARD ========== */}
       <RecipeCard />
 
-      {/* Seção de Receitas Criadas */}
+      {/* ========== SEÇÃO: MINHAS RECEITAS ========== */}
+      {/* Exibida apenas quando há receitas criadas e não há busca ativa */}
       {createdRecipes.length > 0 && !searchQuery.trim() && (
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
@@ -81,7 +89,7 @@ export default function Home() {
         </View>
       )}
 
-      {/* Seção de Receitas da API */}
+      {/* ========== SEÇÃO: RECEITAS POPULARES (API) ========== */}
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
           <Ionicons name="restaurant" size={24} color="#A7333F" />
@@ -97,7 +105,7 @@ export default function Home() {
         <RecipeList searchQuery={searchQuery} recipeType={searchQuery.trim() ? "all" : "api"} cuisineFilter={selectedCuisine} />
       </View>
 
-      {/* Modal de Filtro */}
+      {/* ========== MODAL: FILTRO DE CULINÁRIA ========== */}
       <Modal
         visible={filterModalVisible}
         transparent
@@ -106,6 +114,8 @@ export default function Home() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
+            
+            {/* Header do modal com título e botão fechar */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Filtrar por Culinária</Text>
               <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
@@ -113,6 +123,7 @@ export default function Home() {
               </TouchableOpacity>
             </View>
 
+            {/* Lista de opções de culinária */}
             <FlatList
               data={CUISINES}
               keyExtractor={(item) => item}
@@ -149,7 +160,9 @@ export default function Home() {
   );
 }
 
+// ========== STYLES ==========
 const styles = StyleSheet.create({
+  // Container principal
   container: {
     flex: 1,
     backgroundColor: '#fffefeff',
@@ -157,6 +170,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 80, 
   },
+
+  // ========== HEADER STYLES ==========
   containerHeader: {
     backgroundColor: '#A7333F',
     paddingHorizontal: 20,
@@ -201,6 +216,8 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
   },
+
+  // ========== SEARCH BOX STYLES ==========
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -247,6 +264,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#A7333F',
   },
+
+  // ========== SECTION STYLES ==========
   sectionContainer: {
     marginTop: 15,
     marginBottom: 5,
@@ -274,6 +293,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
+
+  // ========== MODAL STYLES ==========
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -300,6 +321,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+
+  // ========== CUISINE OPTIONS STYLES ==========
   cuisineOption: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -1,3 +1,4 @@
+// ========== IMPORTS ==========
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -5,7 +6,9 @@ import { useState, useEffect } from 'react';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useRecipes } from '../../contexts/RecipesContext';
 
+// ========== COMPONENTE PRINCIPAL ==========
 export default function RecipeDetails() {
+  // ========== STATE & HOOKS ==========
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [recipe, setRecipe] = useState(null);
@@ -14,10 +17,12 @@ export default function RecipeDetails() {
   const { toggleFavorite, isFavorite } = useFavorites();
   const { getRecipeById, deleteRecipe } = useRecipes();
 
+  // ========== LIFECYCLE ==========
   useEffect(() => {
     fetchRecipeDetails();
   }, [id]);
 
+  // ========== FETCH RECIPE ==========
   const fetchRecipeDetails = async () => {
     try {
       // Buscar do contexto (que inclui receitas criadas + API)
@@ -41,6 +46,7 @@ export default function RecipeDetails() {
     }
   };
 
+  // ========== DELETE RECIPE ==========
   const handleDelete = async () => {
     Alert.alert(
       'Deletar Receita',
@@ -91,6 +97,7 @@ export default function RecipeDetails() {
     );
   };
 
+  // ========== LOADING STATE ==========
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -100,6 +107,7 @@ export default function RecipeDetails() {
     );
   }
 
+  // ========== ERROR STATE ==========
   if (!recipe) {
     return (
       <View style={styles.errorContainer}>
@@ -112,12 +120,11 @@ export default function RecipeDetails() {
     );
   }
 
-  // Converte a string de ingredientes em array
+  // ========== PREPARAÇÃO DE DADOS ==========
   const ingredientsList = recipe.ingredients ? recipe.ingredients.split(',').map(i => i.trim()) : [];
-  
-  // Converte a string de instruções em array (dividindo por ponto final)
   const instructionsList = recipe.instructions ? recipe.instructions.split('.').filter(i => i.trim().length > 0) : [];
 
+  // ========== RENDER ==========
   return (
     <View style={styles.container}>
       {/* Header com imagem */}
@@ -286,6 +293,7 @@ export default function RecipeDetails() {
   );
 }
 
+// ========== STYLES ==========
 const styles = StyleSheet.create({
   container: {
     flex: 1,

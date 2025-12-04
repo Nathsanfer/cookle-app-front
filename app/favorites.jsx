@@ -1,14 +1,18 @@
+// ========== IMPORTS ==========
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Animated } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from "../contexts/FavoritesContext";
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'expo-router';
 
+// ========== COMPONENTE PRINCIPAL ==========
 export default function Favorites() {
+  // ========== STATE & HOOKS ==========
   const { favoriteRecipes, toggleFavorite, isFavorite } = useFavorites();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const router = useRouter();
 
+  // ========== ANIMAÇÃO DE FADE ==========
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -17,6 +21,7 @@ export default function Favorites() {
     }).start();
   }, [favoriteRecipes.length]);
 
+  // ========== RENDERIZAÇÃO DE ITEM ==========
   const renderRecipeItem = (item) => (
     <TouchableOpacity 
       key={item.id} 
@@ -73,6 +78,7 @@ export default function Favorites() {
     </TouchableOpacity>
   );
 
+  // ========== RENDERIZAÇÃO EM LINHAS (2 COLUNAS) ==========
   const renderRows = () => {
     const rows = [];
     for (let i = 0; i < favoriteRecipes.length; i += 2) {
@@ -86,6 +92,7 @@ export default function Favorites() {
     return rows;
   };
 
+  // ========== RENDER ==========
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
@@ -139,6 +146,7 @@ export default function Favorites() {
   );
 }
 
+// ========== STYLES ==========
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 

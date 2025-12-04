@@ -1,3 +1,4 @@
+// ========== IMPORTS ==========
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -12,7 +13,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useSearchParams } from 'expo-router';
 
+// ========== COMPONENTE PRINCIPAL ==========
 export default function Chat() {
+  // ========== STATE & PARAMS ==========
   const router = useRouter();
   const [input, setInput] = useState('');
   // useSearchParams may not be available in all environments/versions of expo-router
@@ -43,6 +46,7 @@ export default function Chat() {
     .join('')
     .toUpperCase();
 
+  // ========== MENSAGENS ==========
   const [messages, setMessages] = useState([
     { id: '1', text: `Oi ${contactName}! Tudo bem? 👋`, from: 'them' },
     { id: '2', text: 'Tudo sim! Tava olhando sua receita, queria uma dica.', from: 'me' },
@@ -51,6 +55,7 @@ export default function Chat() {
 
   const listRef = useRef(null);
 
+  // ========== AUTO-SCROLL ==========
   useEffect(() => {
     if (messages.length === 0) return;
     const ref = listRef.current;
@@ -70,6 +75,7 @@ export default function Chat() {
     return () => clearTimeout(t);
   }, [messages]);
 
+  // ========== ENVIAR MENSAGEM ==========
   function handleSend() {
     if (!input.trim()) return;
     const newMsg = { id: String(Date.now()), text: input.trim(), from: 'me' };
@@ -77,6 +83,7 @@ export default function Chat() {
     setInput('');
   }
 
+  // ========== RENDERIZAÇÃO DE MENSAGEM ==========
   function renderItem({ item }) {
     const isMe = item.from === 'me';
     return (
@@ -88,6 +95,7 @@ export default function Chat() {
     );
   }
 
+  // ========== RENDER ==========
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: '#fffefeff' }}
@@ -135,6 +143,7 @@ export default function Chat() {
   );
 }
 
+// ========== STYLES ==========
 const styles = StyleSheet.create({
   header: {
     backgroundColor: '#A7333F',

@@ -1,9 +1,12 @@
+// ========== IMPORTS ==========
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import { Stack } from "expo-router";
 
+// ========== COMPONENTE 404 ==========
 export default function NotFound() {
+  // ========== STATE & HOOKS ==========
   const router = useRouter();
 
   const [fontsLoaded] = useFonts({
@@ -16,10 +19,12 @@ export default function NotFound() {
     return null; // ou um loading spinner
   }
 
+  // ========== HANDLERS ==========
   const handleGoHome = () => {
     router.push("/");
   };
 
+  // ========== RENDER ==========
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -52,6 +57,7 @@ export default function NotFound() {
   );
 }
 
+// ========== STYLES ==========
 const styles = StyleSheet.create({
   container: {
     flex: 1,

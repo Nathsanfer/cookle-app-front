@@ -5,32 +5,41 @@ import { useFavorites } from '../../contexts/FavoritesContext';
 import { useRecipes } from '../../contexts/RecipesContext';
 import { useRouter } from 'expo-router';
 
+// ========== COMPONENT ==========
+// Card destacado que mostra uma receita popular na tela inicial
 export default function RecipeCard() {
+  // ========== STATE ==========
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // ========== HOOKS ==========
   const { toggleFavorite, isFavorite } = useFavorites();
   const { recipes, createdRecipes, loadApiRecipes } = useRecipes();
   const router = useRouter();
 
+  // ========== LIFECYCLE ==========
   useEffect(() => {
     fetchTopRecipe();
   }, []);
 
+  // ========== FETCH TOP RECIPE ==========
+  // Busca receita em destaque: prioriza receitas criadas, depois API
   const fetchTopRecipe = async () => {
     try {
-      // Tentar carregar de receitas criadas primeiro
+      // Prioriza receitas criadas pelo usuário
       if (createdRecipes.length > 0) {
         setRecipe(createdRecipes[0]);
         setLoading(false);
         return;
       }
 
-      // Se não houver criadas, buscar da API
+      // Busca da API se não houver receitas criadas
       await loadApiRecipes();
       
       if (recipes.length > 0) {
         setRecipe(recipes[0]);
       } else {
+        // Fallback: busca receita específica se a lista estiver vazia
         try {
           const response = await fetch('http://localhost:5000/recipes/43');
           const data = await response.json();
@@ -46,6 +55,7 @@ export default function RecipeCard() {
     }
   };
 
+  // ========== LOADING STATE ==========
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -54,25 +64,30 @@ export default function RecipeCard() {
     );
   }
 
+  // ========== EMPTY STATE ==========
   if (!recipe) {
     return null;
   }
 
+  // ========== RENDER ==========
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Receita Popular</Text>
       
+      {/* Card principal da receita */}
       <TouchableOpacity 
         style={styles.card}
         onPress={() => router.push(`/recipe/${recipe.id}`)}
         activeOpacity={0.8}
       >
+        {/* Imagem da receita */}
         <Image 
           source={{ uri: recipe.imageUrl }} 
           style={styles.image}
           resizeMode="cover"
         />
         
+        {/* Botão de favoritar */}
         <TouchableOpacity 
           style={styles.favoriteButton}
           onPress={(e) => {
@@ -87,6 +102,7 @@ export default function RecipeCard() {
           />
         </TouchableOpacity>
 
+        {/* Badge de avaliação */}
         <View style={styles.ratingContainer}>
           <Ionicons name="star" size={16} color="#FFD700" />
           <Text style={styles.ratingText}>
@@ -94,6 +110,7 @@ export default function RecipeCard() {
           </Text>
         </View>
 
+        {/* Conteúdo: título e informações */}
         <View style={styles.content}>
           <Text style={styles.title} numberOfLines={2}>
             {recipe.name}
@@ -121,7 +138,9 @@ export default function RecipeCard() {
   );
 }
 
+// ========== STYLES ==========
 const styles = StyleSheet.create({
+  // Container principal
   container: {
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -132,11 +151,15 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 16,
   },
+
+  // ========== LOADING STATE ==========
   loadingContainer: {
     padding: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // ========== CARD STYLES ==========
   card: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -151,6 +174,8 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 180,
   },
+
+  // ========== OVERLAY ELEMENTS ==========
   favoriteButton: {
     position: 'absolute',
     top: 12,
@@ -179,6 +204,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
+
+  // ========== CARD CONTENT ==========
   content: {
     padding: 16,
   },

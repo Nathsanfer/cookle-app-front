@@ -2,62 +2,55 @@ import { TouchableOpacity, View, ScrollView, Dimensions, Image } from "react-nat
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useRef, useState, useEffect } from 'react';
 
-// Variável é usada para obter a largura da tela do dispositivo, para que possamos definir a largura dos slides do carrossel.
+// ========== CONSTANTS ==========
+// Obtém a largura da tela para definir o tamanho dos slides
 const { width } = Dimensions.get('window');
 
+// ========== COMPONENT ==========
+// Carrossel de imagens com navegação automática e manual
 export default function CarouselComponent({slides}) {
 
-    // Variável usada para rolar o carrossel.
-        const scrollRef = useRef(null);
-        //Variável que rastreia (o índice) qual slide está sendo exibido atualmente.
-        const [currentIndex, setCurrentIndex] = useState(0);
-        // Variável para controlar se o carrossel deve ser reproduzido automaticamente ou não.
-        const [autoplay, setAutoplay] = useState(true);
-        // Variável para o intervalo de tempo entre as transições automáticas do carrossel.
-        const autoplayInterval = 3000; // 3 segundos
+    // ========== STATE & REFS ==========
+    const scrollRef = useRef(null); // Referência para controlar o scroll
+    const [currentIndex, setCurrentIndex] = useState(0); // Índice do slide atual
+    const [autoplay, setAutoplay] = useState(true); // Controla reprodução automática
+    const autoplayInterval = 3000; // Intervalo de 3 segundos entre slides
     
-        // É uma função de callback que detecta e processa os eventos de rolagem do carrossel. Esta função é crucial para o funcionamento do carrossel, pois permite que o componente saiba qual slide está sendo exibido durante a navegação manual.
-        const onScroll = (event) => {
-            // Calcula qual "página" (slide) está visível na tela
-            const index = Math.round(event.nativeEvent.contentOffset.x / width);
-            // Atualiza o índice atual com base na rolagem
-            setCurrentIndex(index);
-        };
-    
-        // Variável que permite mudar o slide para qualquer slide específico com um comando.
-        const goToSlide = (index) => {
-            // 1° Recebe o índice do slide que quer mostrar; 
-            // 2° Verifica se o índice é válido e se o carrossel está pronto para ser rolado;
-            // 3° Calcula a posição do slide e realiza uma animação para fazer a transição do slide;
-            if (scrollRef.current && index >= 0 && index < slides.length) {
-                scrollRef.current.scrollTo({ x: width * index, animated: true });
-                // Atualiza o índice atual para o novo índice
-                setCurrentIndex(index);
-            }
-        };
-    
-        /*
-        O código cria um autoplay no carrossel:
-            - A cada 3 segundos, avança para o próximo slide.
-            - Se estiver no último, volta pro primeiro.
-            - Usa a função goToSlide para trocar o slide.
-            - Reinicia o timer sempre que currentIndex ou autoplay mudar.
-            - Limpa o timer quando o componente desmonta para evitar bugs.
-        */
-        useEffect(() => {
-            let timer;
-            if (autoplay) {
-                timer = setInterval(() => {
-                    const nextIndex = currentIndex === slides.length - 1 ? 0 : currentIndex + 1;
-                    goToSlide(nextIndex);
-                }, autoplayInterval);
-            }
-            return () => clearInterval(timer);
-        }, [currentIndex, autoplay]);
+    // ========== SCROLL HANDLER ==========
+    // Detecta qual slide está visível durante a rolagem manual
+    const onScroll = (event) => {
+        const index = Math.round(event.nativeEvent.contentOffset.x / width);
+        setCurrentIndex(index);
+    };
 
+    // ========== NAVIGATION ==========
+    // Navega para um slide específico com animação
+    const goToSlide = (index) => {
+        if (scrollRef.current && index >= 0 && index < slides.length) {
+            scrollRef.current.scrollTo({ x: width * index, animated: true });
+            setCurrentIndex(index);
+        }
+    };
+
+    // ========== AUTOPLAY ==========
+    // Avança automaticamente para o próximo slide a cada 3 segundos
+    // Volta ao primeiro slide quando chega no último
+    useEffect(() => {
+        let timer;
+        if (autoplay) {
+            timer = setInterval(() => {
+                const nextIndex = currentIndex === slides.length - 1 ? 0 : currentIndex + 1;
+                goToSlide(nextIndex);
+            }, autoplayInterval);
+        }
+        return () => clearInterval(timer);
+    }, [currentIndex, autoplay]);
+
+        // ========== RENDER ==========
         return (
 
             <View style={styles.carouselContainer}>
+                {/* ScrollView horizontal com paginação */}
                 <ScrollView
                     ref={scrollRef}
                     horizontal
@@ -70,6 +63,7 @@ export default function CarouselComponent({slides}) {
                     onTouchStart={() => setAutoplay(false)}
                     onMomentumScrollEnd={() => setAutoplay(true)}
                 >
+                    {/* Renderiza cada slide */}
                     {slides.map((slide, index) => (
                         <View
                             key={index}
@@ -84,6 +78,7 @@ export default function CarouselComponent({slides}) {
                     ))}
                 </ScrollView>
 
+                {/* Botão de navegação: Anterior */}
                 <TouchableOpacity
                     style={[styles.navButtonOverlay, styles.navButtonLeft]}
                     disabled={currentIndex === 0}
@@ -97,6 +92,8 @@ export default function CarouselComponent({slides}) {
                 >
                     <Ionicons name="chevron-back" size={24} color={currentIndex === 0 ? "#ccc" : "#fff"} />
                 </TouchableOpacity>
+
+                {/* Botão de navegação: Próximo */}
                 <TouchableOpacity
                     style={[styles.navButtonOverlay, styles.navButtonRight]}
                     disabled={currentIndex === slides.length - 1}
@@ -111,6 +108,7 @@ export default function CarouselComponent({slides}) {
                     <Ionicons name="chevron-forward" size={24} color={currentIndex === slides.length - 1 ? "#ccc" : "#fff"} />
                 </TouchableOpacity>
 
+                {/* Indicadores de posição (bolinhas) */}
                 <View style={styles.indicatorContainer}>
                     {slides.map((_, index) => (
                         <View
@@ -128,11 +126,15 @@ export default function CarouselComponent({slides}) {
 
 }
 
+// ========== STYLES ==========
 const styles = {
+    // Container principal do carrossel
     carouselContainer: {
         position: 'relative',
         marginTop: 15,
     },
+
+    // ========== SLIDE STYLES ==========
     slide: {
         width,
         height: 250,
@@ -142,6 +144,8 @@ const styles = {
         width: '100%',
         height: '100%',
     },
+
+    // ========== INDICATORS ==========
     indicatorContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
@@ -157,6 +161,8 @@ const styles = {
     activeIndicator: {
         backgroundColor: '#A7333F',
     },
+
+    // ========== NAVIGATION BUTTONS ==========
     navButtonOverlay: {
         position: 'absolute',
         top: '50%',

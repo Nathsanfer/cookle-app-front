@@ -1,8 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Storage wrapper: usa AsyncStorage quando disponível (React Native),
-// e faz fallback para localStorage no ambiente web.
+// ========== STORAGE WRAPPER ==========
+// Abstração de armazenamento: usa AsyncStorage (React Native) ou localStorage (Web)
 const storage = {
   async getItem(key) {
     try {
@@ -39,22 +39,29 @@ const storage = {
   }
 };
 
+// ========== CONTEXT ==========
 const RecipesContext = createContext();
 
-const STORAGE_KEY = '@cookle_created_recipes';
-const API_BASE = 'http://localhost:5000';
+// ========== CONSTANTS ==========
+const STORAGE_KEY = '@cookle_created_recipes'; // Chave para armazenar receitas criadas
+const API_BASE = 'http://localhost:5000'; // URL base da API
 
+// ========== PROVIDER ==========
 export function RecipesProvider({ children }) {
-  const [recipes, setRecipes] = useState([]);
-  const [createdRecipes, setCreatedRecipes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // ========== STATE ==========
+  const [recipes, setRecipes] = useState([]); // Receitas da API
+  const [createdRecipes, setCreatedRecipes] = useState([]); // Receitas criadas localmente
+  const [loading, setLoading] = useState(true); // Estado de carregamento
 
-  // Carregar receitas criadas do AsyncStorage ao iniciar
+  // ========== LIFECYCLE ==========
+  // Carrega receitas criadas e da API ao inicializar
   useEffect(() => {
     loadCreatedRecipes();
     loadApiRecipes();
   }, []);
 
+  // ========== LOAD CREATED RECIPES ==========
+  // Carrega receitas criadas do armazenamento local
   const loadCreatedRecipes = async () => {
     try {
       console.log('RecipesContext: loadCreatedRecipes - reading storage key', STORAGE_KEY);
@@ -68,6 +75,8 @@ export function RecipesProvider({ children }) {
     }
   };
 
+  // ========== LOAD API RECIPES ==========
+  // Busca receitas da API externa
   const loadApiRecipes = async () => {
     try {
       console.log('RecipesContext: loadApiRecipes - iniciando requisição para', `${API_BASE}/recipes`);
@@ -91,27 +100,31 @@ export function RecipesProvider({ children }) {
     }
   };
 
-  // Combinar receitas criadas + API
+  // ========== GET ALL RECIPES ==========
+  // Combina receitas criadas + receitas da API
   const getAllRecipes = () => {
     return [...createdRecipes, ...recipes];
   };
 
+  // ========== ADD RECIPE ==========
+  // Adiciona uma nova receita criada pelo usuário
   const addRecipe = async (recipeData) => {
     try {
-      // Gerar ID único
+      // Gera ID único baseado em timestamp
       const newRecipe = {
         id: Date.now().toString(),
         ...recipeData,
-        isCreated: true, // Flag para identificar receitas criadas localmente
+        isCreated: true,
         createdAt: new Date().toISOString(),
       };
 
-      // Adicionar localmente
+      // Atualiza estado local
       const updated = [newRecipe, ...createdRecipes];
       setCreatedRecipes(updated);
 
       console.log('RecipesContext: addRecipe - persisting', { newRecipe });
-      // Persistir no storage (AsyncStorage ou localStorage no web)
+      
+      // Persiste no armazenamento
       await storage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
       console.log('RecipesContext: addRecipe - persisted successfully');
@@ -123,6 +136,8 @@ export function RecipesProvider({ children }) {
     }
   };
 
+  // ========== DELETE RECIPE ==========
+  // Remove uma receita criada pelo usuário
   const deleteRecipe = async (recipeId) => {
     try {
       console.log('RecipesContext: deleteRecipe - deleting', recipeId);
@@ -136,6 +151,8 @@ export function RecipesProvider({ children }) {
     }
   };
 
+  // ========== UPDATE RECIPE ==========
+  // Atualiza uma receita existente
   const updateRecipe = async (recipeId, updates) => {
     try {
       console.log('RecipesContext: updateRecipe - updating', { recipeId, updates });
@@ -151,15 +168,16 @@ export function RecipesProvider({ children }) {
     }
   };
 
+  // ========== GET RECIPE BY ID ==========
+  // Busca uma receita específica por ID (prioriza receitas criadas)
   const getRecipeById = (id) => {
-    // Buscar em receitas criadas primeiro
     const created = createdRecipes.find(r => r.id === id);
     if (created) return created;
 
-    // Depois em receitas da API
     return recipes.find(r => r.id === id);
   };
 
+  // ========== PROVIDER VALUE ==========
   return (
     <RecipesContext.Provider
       value={{
@@ -180,6 +198,8 @@ export function RecipesProvider({ children }) {
   );
 }
 
+// ========== CUSTOM HOOK ==========
+// Hook para acessar o contexto de receitas
 export function useRecipes() {
   const context = useContext(RecipesContext);
   if (!context) {
