@@ -5,7 +5,7 @@ import { useFavorites } from '../../contexts/FavoritesContext';
 import { useRecipes } from '../../contexts/RecipesContext';
 import { useRouter } from 'expo-router';
 
-export default function RecipeList({ searchQuery = "", recipeType = "all" }) {
+export default function RecipeList({ searchQuery = "", recipeType = "all", cuisineFilter = "Todas" }) {
   const { toggleFavorite, isFavorite } = useFavorites();
   const { getAllRecipes, createdRecipes, recipes: apiRecipes, loading } = useRecipes();
   const router = useRouter();
@@ -21,21 +21,30 @@ export default function RecipeList({ searchQuery = "", recipeType = "all" }) {
     }
   }, [createdRecipes, apiRecipes, recipeType]);
 
-  // Filtrar receitas com base na pesquisa
+  // Filtrar receitas com base na pesquisa e culinária
   const filteredRecipes = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return recipes;
+    let filtered = recipes;
+
+    // Filtro de culinária
+    if (cuisineFilter && cuisineFilter !== 'Todas') {
+      filtered = filtered.filter(recipe => {
+        const cuisine = (recipe.cuisine || recipe.culinaria || recipe.country || '').toLowerCase();
+        return cuisine === cuisineFilter.toLowerCase();
+      });
     }
 
-    const query = searchQuery.toLowerCase().trim();
-    
-    return recipes.filter(recipe => {
-      const name = (recipe.name || recipe.title || '').toLowerCase();
-      const cuisine = (recipe.cuisine || recipe.culinaria || recipe.category || '').toLowerCase();
-      
-      return name.includes(query) || cuisine.includes(query);
-    });
-  }, [recipes, searchQuery]);
+    // Filtro de pesquisa
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(recipe => {
+        const name = (recipe.name || recipe.title || '').toLowerCase();
+        const cuisine = (recipe.cuisine || recipe.culinaria || recipe.category || '').toLowerCase();
+        return name.includes(query) || cuisine.includes(query);
+      });
+    }
+
+    return filtered;
+  }, [recipes, searchQuery, cuisineFilter]);
 
   if (loading) {
     return (
