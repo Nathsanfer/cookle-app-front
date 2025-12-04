@@ -11,10 +11,10 @@ import {
   Alert,
   KeyboardAvoidingView,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useRecipes } from '../contexts/RecipesContext';
 
 const CATEGORIES = ['Entrada', 'Prato Principal', 'Sobremesa', 'Bebida', 'Aperitivo'];
@@ -24,7 +24,9 @@ const PORTIONS = ['1', '2', '3', '4', '5', '6', '8', '10'];
 
 export default function Create() {
   const router = useRouter();
-  const { addRecipe } = useRecipes();
+  const { addRecipe, updateRecipe, getRecipeById } = useRecipes();
+  const { id } = useLocalSearchParams();
+  const isEditing = !!id;
   
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -50,6 +52,40 @@ export default function Create() {
       setImageUrl(result.assets[0].uri);
     }
   };
+
+  // Carregar dados quando em modo edição
+  useEffect(() => {
+    if (!id) return;
+
+    const recipe = getRecipeById(id);
+    if (!recipe) return;
+
+    setName(recipe.name || "");
+    setDescription(recipe.description || "");
+    setCategory(recipe.category || "");
+    setCountry(recipe.cuisine || recipe.country || "");
+
+    // Converter minutos para uma opção de PREP_TIMES quando possível
+    const minutes = recipe.time;
+    const mapMinutesToOption = (m) => {
+      if (!m && m !== 0) return '';
+      if (m <= 15) return '15 min';
+      if (m <= 30) return '30 min';
+      if (m <= 45) return '45 min';
+      if (m === 60) return '1h';
+      if (m === 90) return '1h30';
+      if (m === 120) return '2h';
+      if (m === 180) return '3h';
+      if (m >= 240) return '4h+';
+      return `${m} min`;
+    };
+
+    setPrepTime(mapMinutesToOption(minutes));
+    setPortions(String(recipe.servings || recipe.portions || ''));
+    setIngredients(recipe.ingredients || "");
+    setInstructions(recipe.instructions || "");
+    setImageUrl(recipe.imageUrl || "");
+  }, [id, getRecipeById]);
 
   const validateForm = () => {
     if (!name.trim()) {
@@ -90,8 +126,12 @@ export default function Create() {
   const handleSave = async () => {
     if (!validateForm()) return;
 
+    console.log('handleSave start', { isEditing, id });
+
     try {
       setSaving(true);
+
+      console.log('handleSave - preparing recipeData...');
 
       let timeInMinutes = prepTime;
       if (prepTime.includes('min')) {
@@ -117,24 +157,50 @@ export default function Create() {
         rating: 5,
       };
 
-      await addRecipe(recipeData);
+      console.log('handleSave - recipeData', recipeData);
 
-      Alert.alert(
-        'Sucesso! ✨',
-        'Receita criada com sucesso!',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              clearForm();
-              router.push('/');
+      if (isEditing) {
+        // Atualizar receita existente
+        console.log('handleSave - calling updateRecipe', id);
+        await updateRecipe(id, recipeData);
+        console.log('handleSave - updateRecipe resolved', id);
+
+        Alert.alert(
+          'Sucesso! ✨',
+          'Receita atualizada com sucesso!',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                router.push(`/recipe/${id}`);
+              }
             }
-          }
-        ]
-      );
+          ]
+        );
+      } else {
+        console.log('handleSave - calling addRecipe');
+        const newRecipe = await addRecipe(recipeData);
+        console.log('handleSave - addRecipe resolved', { newRecipe });
+
+        Alert.alert(
+          'Sucesso! ✨',
+          'Receita criada com sucesso!',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                clearForm();
+                router.push('/');
+              }
+            }
+          ]
+        );
+      }
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível salvar a receita');
-      console.error(error);
+      console.error('Erro em handleSave:', error);
+      Alert.alert('Erro', 'Não foi possível salvar a receita - ver console para detalhes', [
+        { text: 'OK' }
+      ]);
     } finally {
       setSaving(false);
     }
@@ -184,7 +250,7 @@ export default function Create() {
         >
           <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nova Receita</Text>
+        <Text style={styles.headerTitle}>{isEditing ? 'Editar Receita' : 'Nova Receita'}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -372,6 +438,21 @@ export default function Create() {
                 </>
               )}
             </TouchableOpacity>
+
+            {/* Web fallback: permitir colar uma URL de imagem quando ImagePicker não estiver disponível */}
+            {Platform.OS === 'web' && (
+              <View style={{ marginTop: 12 }}>
+                <Text style={[styles.label, { marginBottom: 8, fontSize: 14 }]}>Colar URL da imagem (web)</Text>
+                <TextInput
+                  style={styles.imageUrlInput}
+                  placeholder="https://exemplo.com/imagem.jpg"
+                  placeholderTextColor="#9ca3af"
+                  value={imageUrl}
+                  onChangeText={setImageUrl}
+                  editable={!saving}
+                />
+              </View>
+            )}
           </View>
 
           <View style={styles.buttonsContainer}>
@@ -382,12 +463,12 @@ export default function Create() {
               activeOpacity={0.8}
             >
               <Ionicons 
-                name={saving ? "hourglass-outline" : "checkmark-circle"} 
+                name={saving ? "hourglass-outline" : (isEditing ? "pencil" : "checkmark-circle")} 
                 size={24} 
                 color="white" 
               />
               <Text style={styles.saveButtonText}>
-                {saving ? 'Salvando...' : 'Salvar Receita'}
+                {saving ? (isEditing ? 'Atualizando...' : 'Salvando...') : (isEditing ? 'Atualizar Receita' : 'Salvar Receita')}
               </Text>
             </TouchableOpacity>
 
@@ -706,6 +787,15 @@ const styles = StyleSheet.create({
     color: '#10b981',
     marginTop: 10,
     fontWeight: '600',
+  },
+  imageUrlInput: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 14,
+    color: '#1f2937',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   buttonsContainer: {
     gap: 15,

@@ -56,11 +56,27 @@ export default function RecipeDetails() {
           onPress: async () => {
             try {
               setIsDeleting(true);
+
+              // Deletar a receita do contexto/armazenamento
               await deleteRecipe(id);
+
+              // Se estava nos favoritos, remover também
+              if (isFavorite(id) && recipe) {
+                try {
+                  toggleFavorite(recipe);
+                } catch (favErr) {
+                  console.warn('Erro ao remover dos favoritos:', favErr);
+                }
+              }
+
+              // Mostrar sucesso e voltar
               Alert.alert('Sucesso!', 'Receita deletada com sucesso!', [
                 {
                   text: 'OK',
-                  onPress: () => router.back(),
+                  onPress: () => {
+                    setIsDeleting(false);
+                    router.back();
+                  },
                 },
               ]);
             } catch (error) {
@@ -132,13 +148,27 @@ export default function RecipeDetails() {
         </TouchableOpacity>
 
         {recipe.isCreated && (
-          <TouchableOpacity 
-            style={styles.deleteIconButton}
-            onPress={handleDelete}
-            disabled={isDeleting}
-          >
-            <Ionicons name="trash-outline" size={24} color="#FF4444" />
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={styles.editIconButton}
+              onPress={() => router.push(`/create?id=${recipe.id}`)}
+              disabled={isDeleting}
+            >
+              <Ionicons name="pencil-outline" size={24} color="#3A86FF" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.deleteIconButton}
+              onPress={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <ActivityIndicator size="small" color="#FF4444" />
+              ) : (
+                <Ionicons name="trash-outline" size={24} color="#FF4444" />
+              )}
+            </TouchableOpacity>
+          </>
         )}
 
         <TouchableOpacity style={styles.shareIconButton}>
@@ -336,10 +366,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
-  deleteIconButton: {
+  editIconButton: {
     position: 'absolute',
     top: 50,
     right: 120,
+    backgroundColor: '#fff',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  deleteIconButton: {
+    position: 'absolute',
+    top: 50,
+    right: 170,
     backgroundColor: '#fff',
     width: 40,
     height: 40,

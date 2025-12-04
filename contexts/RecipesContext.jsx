@@ -1,6 +1,44 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Storage wrapper: usa AsyncStorage quando disponível (React Native),
+// e faz fallback para localStorage no ambiente web.
+const storage = {
+  async getItem(key) {
+    try {
+      if (AsyncStorage && typeof AsyncStorage.getItem === 'function') {
+        return await AsyncStorage.getItem(key);
+      }
+    } catch (e) {
+      console.warn('AsyncStorage.getItem falhou, tentando localStorage', e);
+    }
+
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return Promise.resolve(window.localStorage.getItem(key));
+    }
+    return Promise.resolve(null);
+  },
+  async setItem(key, value) {
+    try {
+      if (AsyncStorage && typeof AsyncStorage.setItem === 'function') {
+        return await AsyncStorage.setItem(key, value);
+      }
+    } catch (e) {
+      console.warn('AsyncStorage.setItem falhou, tentando localStorage', e);
+    }
+
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        window.localStorage.setItem(key, value);
+        return Promise.resolve();
+      } catch (e) {
+        console.warn('localStorage.setItem falhou', e);
+      }
+    }
+    return Promise.resolve();
+  }
+};
+
 const RecipesContext = createContext();
 
 const STORAGE_KEY = '@cookle_created_recipes';
@@ -18,7 +56,8 @@ export function RecipesProvider({ children }) {
 
   const loadCreatedRecipes = async () => {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      console.log('RecipesContext: loadCreatedRecipes - reading storage key', STORAGE_KEY);
+      const stored = await storage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         setCreatedRecipes(parsed);
@@ -61,8 +100,11 @@ export function RecipesProvider({ children }) {
       const updated = [newRecipe, ...createdRecipes];
       setCreatedRecipes(updated);
 
-      // Persistir no AsyncStorage
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      console.log('RecipesContext: addRecipe - persisting', { newRecipe });
+      // Persistir no storage (AsyncStorage ou localStorage no web)
+      await storage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+      console.log('RecipesContext: addRecipe - persisted successfully');
 
       return newRecipe;
     } catch (error) {
@@ -73,9 +115,11 @@ export function RecipesProvider({ children }) {
 
   const deleteRecipe = async (recipeId) => {
     try {
+      console.log('RecipesContext: deleteRecipe - deleting', recipeId);
       const updated = createdRecipes.filter(r => r.id !== recipeId);
       setCreatedRecipes(updated);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      await storage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      console.log('RecipesContext: deleteRecipe - deleted and persisted', recipeId);
     } catch (error) {
       console.error('Erro ao deletar receita:', error);
       throw error;
@@ -84,11 +128,13 @@ export function RecipesProvider({ children }) {
 
   const updateRecipe = async (recipeId, updates) => {
     try {
+      console.log('RecipesContext: updateRecipe - updating', { recipeId, updates });
       const updated = createdRecipes.map(r => 
         r.id === recipeId ? { ...r, ...updates, updatedAt: new Date().toISOString() } : r
       );
       setCreatedRecipes(updated);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      await storage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      console.log('RecipesContext: updateRecipe - updated and persisted', recipeId);
     } catch (error) {
       console.error('Erro ao atualizar receita:', error);
       throw error;
