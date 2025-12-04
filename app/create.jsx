@@ -10,8 +10,9 @@ import {
   FlatList,
   Alert,
   KeyboardAvoidingView,
+  Animated,
 } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -39,6 +40,8 @@ export default function Create() {
   const [imageUrl, setImageUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState({ title: '', subtitle: '' });
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -165,36 +168,36 @@ export default function Create() {
         await updateRecipe(id, recipeData);
         console.log('handleSave - updateRecipe resolved', id);
 
-        Alert.alert(
-          'Sucesso! ✨',
-          'Receita atualizada com sucesso!',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                router.push(`/recipe/${id}`);
-              }
-            }
-          ]
-        );
+        setSuccessMessage({
+          title: 'Receita Atualizada!',
+          subtitle: 'Sua receita foi atualizada com sucesso'
+        });
+        setShowSuccessModal(true);
+        
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          setTimeout(() => {
+            router.push(`/recipe/${id}`);
+          }, 300);
+        }, 2500);
       } else {
         console.log('handleSave - calling addRecipe');
         const newRecipe = await addRecipe(recipeData);
         console.log('handleSave - addRecipe resolved', { newRecipe });
 
-        Alert.alert(
-          'Sucesso! ✨',
-          'Receita criada com sucesso!',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                clearForm();
-                router.push('/');
-              }
-            }
-          ]
-        );
+        setSuccessMessage({
+          title: 'Receita Criada!',
+          subtitle: 'Sua receita foi salva com sucesso'
+        });
+        setShowSuccessModal(true);
+        
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          setTimeout(() => {
+            clearForm();
+            router.push('/');
+          }, 300);
+        }, 2500);
       }
     } catch (error) {
       console.error('Erro em handleSave:', error);
@@ -534,7 +537,180 @@ export default function Create() {
         onClose={() => setModalOpen(null)}
         title="Selecione a Porção"
       />
+
+      <SuccessModal 
+        visible={showSuccessModal} 
+        title={successMessage.title}
+        subtitle={successMessage.subtitle}
+      />
     </View>
+  );
+}
+
+function SuccessModal({ visible, title, subtitle }) {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const checkmarkAnim = useRef(new Animated.Value(0)).current;
+  const confettiAnims = useRef(
+    Array.from({ length: 15 }, () => ({
+      translateY: new Animated.Value(0),
+      translateX: new Animated.Value(0),
+      rotate: new Animated.Value(0),
+      opacity: new Animated.Value(1),
+    }))
+  ).current;
+
+  useEffect(() => {
+    if (visible) {
+      // Reset animations
+      scaleAnim.setValue(0);
+      fadeAnim.setValue(0);
+      checkmarkAnim.setValue(0);
+      confettiAnims.forEach(anim => {
+        anim.translateY.setValue(0);
+        anim.translateX.setValue(0);
+        anim.rotate.setValue(0);
+        anim.opacity.setValue(1);
+      });
+
+      // Start animations
+      Animated.sequence([
+        Animated.parallel([
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            friction: 8,
+            tension: 40,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.delay(200),
+          Animated.spring(checkmarkAnim, {
+            toValue: 1,
+            friction: 5,
+            tension: 100,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+
+      // Confetti animation
+      confettiAnims.forEach((anim, index) => {
+        const angle = (index / confettiAnims.length) * Math.PI * 2;
+        const distance = 150 + Math.random() * 100;
+        
+        Animated.parallel([
+          Animated.timing(anim.translateX, {
+            toValue: Math.cos(angle) * distance,
+            duration: 1000 + Math.random() * 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.translateY, {
+            toValue: Math.sin(angle) * distance,
+            duration: 1000 + Math.random() * 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.rotate, {
+            toValue: Math.random() * 720 - 360,
+            duration: 1000 + Math.random() * 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.opacity, {
+            toValue: 0,
+            duration: 1000,
+            delay: 500,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      });
+    }
+  }, [visible]);
+
+  if (!visible) return null;
+
+  const confettiColors = ['#FF6B6B', '#4ECDC4', '#FFD93D', '#95E1D3', '#F8B500', '#A7333F'];
+
+  return (
+    <Modal
+      transparent
+      visible={visible}
+      animationType="none"
+      statusBarTranslucent
+    >
+      <Animated.View 
+        style={[
+          successModalStyles.overlay,
+          {
+            opacity: fadeAnim,
+          }
+        ]}
+      >
+        <Animated.View 
+          style={[
+            successModalStyles.container,
+            {
+              transform: [{ scale: scaleAnim }],
+            }
+          ]}
+        >
+          {/* Confetti particles */}
+          {confettiAnims.map((anim, index) => (
+            <Animated.View
+              key={index}
+              style={[
+                successModalStyles.confetti,
+                {
+                  backgroundColor: confettiColors[index % confettiColors.length],
+                  transform: [
+                    { translateX: anim.translateX },
+                    { translateY: anim.translateY },
+                    { rotate: anim.rotate.interpolate({
+                      inputRange: [0, 360],
+                      outputRange: ['0deg', '360deg'],
+                    }) },
+                  ],
+                  opacity: anim.opacity,
+                }
+              ]}
+            />
+          ))}
+
+          {/* Success icon with checkmark */}
+          <View style={successModalStyles.iconContainer}>
+            <View style={successModalStyles.iconCircle}>
+              <Ionicons name="checkmark-circle" size={80} color="#10b981" />
+            </View>
+            <Animated.View 
+              style={[
+                successModalStyles.checkmarkBurst,
+                {
+                  transform: [{ scale: checkmarkAnim }],
+                  opacity: checkmarkAnim,
+                }
+              ]}
+            >
+              <Ionicons name="sparkles" size={40} color="#FFD93D" />
+            </Animated.View>
+          </View>
+
+          {/* Text content */}
+          <Text style={successModalStyles.title}>{title}</Text>
+          <Text style={successModalStyles.subtitle}>{subtitle}</Text>
+
+          {/* Decorative elements */}
+          <View style={successModalStyles.decorativeRow}>
+            <Ionicons name="star" size={20} color="#FFD93D" />
+            <Ionicons name="heart" size={20} color="#FF6B6B" />
+            <Ionicons name="star" size={20} color="#FFD93D" />
+          </View>
+        </Animated.View>
+      </Animated.View>
+    </Modal>
   );
 }
 
@@ -585,6 +761,70 @@ function PickerModal({ visible, options, value, onSelect, onClose, title }) {
     </Modal>
   );
 }
+
+const successModalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    backgroundColor: 'white',
+    borderRadius: 30,
+    padding: 40,
+    alignItems: 'center',
+    width: '85%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  confetti: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  iconContainer: {
+    position: 'relative',
+    marginBottom: 25,
+  },
+  iconCircle: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 60,
+    padding: 20,
+  },
+  checkmarkBurst: {
+    position: 'absolute',
+    top: -15,
+    right: -15,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  decorativeRow: {
+    flexDirection: 'row',
+    gap: 15,
+    marginTop: 10,
+  },
+});
 
 const modalStyles = StyleSheet.create({
   container: {

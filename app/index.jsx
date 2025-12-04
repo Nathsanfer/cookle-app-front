@@ -1,10 +1,11 @@
 import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from "react-native";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import CarouselComponent from "../components/Carousel/Carousel.jsx";
 import RecipeCard from "../components/RecipeCard/RecipeCard.jsx";
 import RecipeList from "../components/RecipeList/RecipeList.jsx";
 import { useRecipes } from "../contexts/RecipesContext.jsx";
+import { Ionicons } from "@expo/vector-icons";
 
 const slides = [
   {
@@ -20,13 +21,7 @@ const slides = [
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { loadCreatedRecipes, loadApiRecipes } = useRecipes();
-
-  // Carregar receitas criadas e da API ao montar o componente
-  useEffect(() => {
-    loadCreatedRecipes();
-    loadApiRecipes();
-  }, []);
+  const { createdRecipes } = useRecipes();
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -64,7 +59,31 @@ export default function Home() {
 
       <RecipeCard />
 
-      <RecipeList searchQuery={searchQuery} />
+      {/* Seção de Receitas Criadas */}
+      {createdRecipes.length > 0 && !searchQuery.trim() && (
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="create" size={24} color="#A7333F" />
+            <Text style={styles.sectionTitleText}>Minhas Receitas</Text>
+          </View>
+          <Text style={styles.sectionSubtitle}>Receitas que você criou no app</Text>
+          <RecipeList searchQuery={searchQuery} recipeType="created" />
+        </View>
+      )}
+
+      {/* Seção de Receitas da API */}
+      <View style={styles.sectionContainer}>
+        <View style={styles.sectionHeader}>
+          <Ionicons name="restaurant" size={24} color="#A7333F" />
+          <Text style={styles.sectionTitleText}>
+            {searchQuery.trim() ? 'Resultados da Busca' : 'Receitas Populares'}
+          </Text>
+        </View>
+        {!searchQuery.trim() && (
+          <Text style={styles.sectionSubtitle}>Descubra receitas deliciosas</Text>
+        )}
+        <RecipeList searchQuery={searchQuery} recipeType={searchQuery.trim() ? "all" : "api"} />
+      </View>
 
     </ScrollView>
   );
@@ -157,6 +176,28 @@ const styles = StyleSheet.create({
   filterIcon: {
     width: 20,
     height: 20,
+  },
+  sectionContainer: {
+    marginTop: 15,
+    marginBottom: 5,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
+  sectionTitleText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginLeft: 10,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    paddingHorizontal: 20,
+    marginBottom: 15,
   },
   text: {
     fontSize: 20,

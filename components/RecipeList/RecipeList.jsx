@@ -1,34 +1,25 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useRecipes } from '../../contexts/RecipesContext';
 import { useRouter } from 'expo-router';
 
-export default function RecipeList({ searchQuery = "" }) {
-  const [loading, setLoading] = useState(true);
+export default function RecipeList({ searchQuery = "", recipeType = "all" }) {
   const { toggleFavorite, isFavorite } = useFavorites();
-  const { getAllRecipes, loadApiRecipes, createdRecipes } = useRecipes();
+  const { getAllRecipes, createdRecipes, recipes: apiRecipes, loading } = useRecipes();
   const router = useRouter();
 
-  useEffect(() => {
-    fetchRecipes();
-  }, []);
-
-  const fetchRecipes = async () => {
-    try {
-      await loadApiRecipes();
-    } catch (error) {
-      console.error('Erro ao buscar receitas:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Combinar receitas criadas + API
+  // Selecionar receitas com base no tipo
   const recipes = useMemo(() => {
-    return getAllRecipes();
-  }, [createdRecipes]);
+    if (recipeType === "created") {
+      return createdRecipes;
+    } else if (recipeType === "api") {
+      return apiRecipes;
+    } else {
+      return getAllRecipes();
+    }
+  }, [createdRecipes, apiRecipes, recipeType]);
 
   // Filtrar receitas com base na pesquisa
   const filteredRecipes = useMemo(() => {
@@ -50,19 +41,28 @@ export default function RecipeList({ searchQuery = "" }) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#A7333F" />
-        <Text>Carregando receitas...</Text>
+        <Text style={styles.loadingText}>Carregando receitas...</Text>
       </View>
     );
   }
 
   if (!recipes || recipes.length === 0) {
+    // Mensagens diferentes para cada tipo
+    let message = "Nenhuma receita encontrada.";
+    if (recipeType === "created") {
+      message = "Você ainda não criou nenhuma receita.";
+    } else if (recipeType === "api") {
+      message = "Nenhuma receita disponível da API.";
+    }
+    
     return (
       <View style={styles.container}>
-        <Text style={styles.sectionTitle}>Receitas</Text>
-        <Text>Nenhuma receita encontrada.</Text>
-        <Text style={{ fontSize: 10, color: '#999', marginTop: 10 }}>
-          Verifique se a API está rodando em http://localhost:5000
-        </Text>
+        <Text style={styles.emptyText}>{message}</Text>
+        {recipeType === "api" && (
+          <Text style={styles.apiHint}>
+            Verifique se a API está rodando em http://localhost:5000
+          </Text>
+        )}
       </View>
     );
   }
@@ -71,7 +71,6 @@ export default function RecipeList({ searchQuery = "" }) {
   if (searchQuery.trim() && filteredRecipes.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.sectionTitle}>Receitas</Text>
         <Text style={styles.noResultsText}>
           Nenhuma receita encontrada para "{searchQuery}"
         </Text>
@@ -142,10 +141,6 @@ export default function RecipeList({ searchQuery = "" }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>
-        Receitas ({filteredRecipes.length})
-        {searchQuery.trim() && <Text style={styles.searchIndicator}> - "{searchQuery}"</Text>}
-      </Text>
       {renderRows()}
     </View>
   );
@@ -154,19 +149,19 @@ export default function RecipeList({ searchQuery = "" }) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
+    paddingBottom: 10,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
-  },
-  searchIndicator: {
+  emptyText: {
     fontSize: 16,
-    fontWeight: 'normal',
-    color: '#A7333F',
+    color: '#6b7280',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
+  apiHint: {
+    fontSize: 12,
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginTop: 5,
   },
   noResultsText: {
     fontSize: 16,
@@ -184,6 +179,11 @@ const styles = StyleSheet.create({
     padding: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#6b7280',
   },
   row: {
     flexDirection: 'row',
