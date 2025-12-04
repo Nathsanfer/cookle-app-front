@@ -52,6 +52,7 @@ export function RecipesProvider({ children }) {
   // Carregar receitas criadas do AsyncStorage ao iniciar
   useEffect(() => {
     loadCreatedRecipes();
+    loadApiRecipes();
   }, []);
 
   const loadCreatedRecipes = async () => {
@@ -69,15 +70,24 @@ export function RecipesProvider({ children }) {
 
   const loadApiRecipes = async () => {
     try {
+      console.log('RecipesContext: loadApiRecipes - iniciando requisição para', `${API_BASE}/recipes`);
       const response = await fetch(`${API_BASE}/recipes`);
+      console.log('RecipesContext: loadApiRecipes - resposta recebida, status:', response.status);
+      
       if (!response.ok) {
         throw new Error('Erro ao buscar receitas da API');
       }
       const data = await response.json();
+      console.log('RecipesContext: loadApiRecipes - dados recebidos:', data);
+      
       const recipeArray = Array.isArray(data) ? data : (data.recipes || data.data || []);
+      console.log('RecipesContext: loadApiRecipes - array de receitas:', recipeArray.length, 'receitas');
+      
       setRecipes(recipeArray);
+      setLoading(false);
     } catch (error) {
       console.error('Erro ao buscar receitas:', error);
+      setLoading(false);
     }
   };
 
