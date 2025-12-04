@@ -2,10 +2,12 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from "rea
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from "../contexts/FavoritesContext";
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 
 export default function Profile() {
   const { favoriteRecipes } = useFavorites();
   const [activeTab, setActiveTab] = useState('about');
+  const router = useRouter();
 
   // Dados simulados do usuário
   const userStats = {
@@ -72,7 +74,7 @@ export default function Profile() {
             <Ionicons name="person-add-outline" size={18} color="#fff" />
             <Text style={styles.primaryButtonText}>Seguir</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryButton}>
+          <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push(`chat?user=${encodeURIComponent('Ronald Trevis Scott MC')}`)}>
             <Ionicons name="chatbubble-outline" size={18} color="#A7333F" />
             <Text style={styles.secondaryButtonText}>Mensagem</Text>
           </TouchableOpacity>

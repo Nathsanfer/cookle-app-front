@@ -72,14 +72,21 @@ export default function Layout() {
         }}
       />
 
-      {/* Tela 404 - Oculta da navegação e sem tabs */}
+      {/* Chat (exibido como quinta aba) */}
       <Tabs.Screen
-        name="+not-found"
+        name="chat"
         options={{
-          href: null,
-          tabBarStyle: { display: "none" },
+          title: "Chat",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubble" color={color} size={size} />
+          ),
         }}
       />
+
+      {/* Not exposing +not-found explicitly here to avoid duplicate screen names.
+          The filesystem already provides the +not-found route. If you want a
+          dedicated tab that opens a 404-like screen, I can create a separate
+          route (e.g. `notfound.jsx`) and add it as a tab to avoid conflicts. */}
 
       {/* Tela de Detalhes da Receita - Oculta da navegação mas mantém tabs */}
       <Tabs.Screen
